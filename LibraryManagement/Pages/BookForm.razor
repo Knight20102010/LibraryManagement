@@ -1,0 +1,84 @@
+﻿@page "/bookform/{Id:int?}"
+@using LibraryManagement.Data
+@using LibraryManagement.Models
+@using Microsoft.EntityFrameworkCore
+@inject LibraryContext DbContext
+@inject NavigationManager Navigation
+
+<h3>@(book.Id == 0 ? "Pridanie novej knihy" : "Úprava knihy")</h3>
+
+<EditForm Model="@book" OnValidSubmit="SaveBook">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="Title">Názov:</label>
+        <InputText id="Title" class="form-control" @bind-Value="book.Title" />
+    </div>
+    <div class="form-group">
+        <label for="PublishedDate">Dátum vydania:</label>
+        <InputDate id="PublishedDate" class="form-control" @bind-Value="book.PublishedDate" />
+    </div>
+    <div class="form-group">
+        <label for="Genre">Žáner:</label>
+        <InputText id="Genre" class="form-control" @bind-Value="book.Genre" />
+    </div>
+    <div class="form-group">
+        <label for="Author">Autor:</label>
+        <InputSelect id="Author" class="form-control" @bind-Value="book.AuthorId">
+            <option value="">Vyberte autora</option>
+            @foreach (var author in authors)
+            {
+                <option value="@author.Id">@author.Name</option>
+            }
+        </InputSelect>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Uložiť</button>
+    <button type="button" class="btn btn-secondary" @onclick="Cancel">Zrušiť</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private Book book = new Book();
+    private List<Author> authors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Načítanie všetkých autorov pre výber
+        authors = await DbContext.Authors.ToListAsync();
+
+        // Ak existuje ID, načítame existujúcu knihu na úpravu
+        if (Id.HasValue)
+        {
+            book = await DbContext.Books.FindAsync(Id.Value) ?? new Book();
+        }
+    }
+
+    private async Task SaveBook()
+    {
+        // Ak kniha nemá ID, pridáme ju ako novú
+        if (book.Id == 0)
+        {
+            DbContext.Books.Add(book);
+        }
+        else
+        {
+            DbContext.Books.Update(book);
+        }
+
+        // Uloženie zmien v databáze
+        await DbContext.SaveChangesAsync();
+
+        // Navigácia späť na zoznam kníh
+        Navigation.NavigateTo("/books");
+    }
+
+    private void Cancel()
+    {
+        // Navigácia späť na zoznam kníh bez uloženia zmien
+        Navigation.NavigateTo("/books");
+    }
+}

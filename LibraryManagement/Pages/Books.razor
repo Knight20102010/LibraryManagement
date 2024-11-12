@@ -1,0 +1,224 @@
+﻿@page "/books"
+@using LibraryManagement.Data
+@using LibraryManagement.Models
+@using Microsoft.EntityFrameworkCore
+@inject LibraryContext DbContext
+@inject NavigationManager Navigation
+
+<!-- Navigačný panel s odkazmi na Home a Books -->
+<nav class="navbar navbar-expand-sm navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Moja Aplikácia</a>
+        <button class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="@NavMenuCssClass">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/books">Books</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<h3>Zoznam kníh</h3>
+
+<button class="btn btn-primary mb-3" @onclick="AddNewBook">Pridať novú knihu</button>
+
+<div class="mb-3">
+    <!-- Vyhľadávacie pole podľa názvu knihy -->
+    <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Hľadať knihy..." class="form-control mb-3" />
+
+    <!-- Výberové políčko pre filter podľa žánru -->
+    <select @onchange="FilterBooksByGenre" class="form-control mb-3">
+        <option value="">Vyberte žáner</option>
+        @foreach (var genre in genres)
+        {
+            <option value="@genre">@genre</option>
+        }
+    </select>
+
+    <!-- Výberové políčko pre filter podľa autora -->
+    <select @onchange="FilterBooksByAuthor" class="form-control mb-3">
+        <option value="0">Vyberte autora</option>
+        @foreach (var author in authors)
+        {
+            <option value="@author.Id">@author.Name</option>
+        }
+    </select>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Názov</th>
+            <th>Žáner</th>
+            <th>Dátum vydania</th>
+            <th>Autor</th>
+            <th>Akcie</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var book in paginatedBooks)
+        {
+            <tr>
+                <td>@book.Title</td>
+                <td>@book.Genre</td>
+                <td>@book.PublishedDate.ToShortDateString()</td>
+                <td>@book.Author.Name</td>
+                <td>
+                    <button class="btn btn-secondary" @onclick="() => EditBook(book.Id)">Upraviť</button>
+                    <button class="btn btn-danger" @onclick="() => DeleteBook(book.Id)">Odstrániť</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="pagination mt-3">
+    <button class="btn btn-primary mr-2" @onclick="PreviousPage" disabled="@(currentPage == 1)">Predchádzajúca</button>
+    <span>Strana @currentPage z @totalPages</span>
+    <button class="btn btn-primary ml-2" @onclick="NextPage" disabled="@(currentPage == totalPages)">Ďalšia</button>
+</div>
+
+@code {
+    private List<Book> paginatedBooks = new List<Book>();
+    private List<string> genres = new List<string>();
+    private List<Author> authors = new List<Author>();
+    private int currentPage = 1;
+    private int pageSize = 5;
+    private int totalPages = 1;
+    private string searchTerm = string.Empty;
+    private string previousSearchTerm = string.Empty; // Pomocná premenná na sledovanie zmien
+    private string selectedGenre = string.Empty;
+    private int selectedAuthorId = 0;
+
+    // Premenná pre kontrolu zobrazenia menu
+    private string NavMenuCssClass => navMenuVisible ? "collapse navbar-collapse show" : "collapse navbar-collapse";
+    private bool navMenuVisible = false;
+
+    private void ToggleNavMenu()
+    {
+        navMenuVisible = !navMenuVisible;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFilters();
+        await LoadBooks();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (previousSearchTerm != searchTerm)
+        {
+            previousSearchTerm = searchTerm;
+            await FilterBooks();
+        }
+    }
+
+    private async Task LoadFilters()
+    {
+        genres = await DbContext.Books
+                    .Select(b => b.Genre)
+                    .Distinct()
+                    .ToListAsync();
+
+        authors = await DbContext.Authors.ToListAsync();
+    }
+
+    private async Task LoadBooks()
+    {
+        // Vyhľadávanie kníh na základe zadanej hodnoty, žánru a autora
+        var query = DbContext.Books.Include(b => b.Author).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(b => b.Title.ToLower().Contains(searchTerm.ToLower()));
+        }
+
+        if (!string.IsNullOrEmpty(selectedGenre))
+        {
+            query = query.Where(b => b.Genre == selectedGenre);
+        }
+
+        if (selectedAuthorId > 0)
+        {
+            query = query.Where(b => b.Author.Id == selectedAuthorId);
+        }
+
+        // Celkový počet strán
+        int totalRecords = await query.CountAsync();
+        totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+
+        // Paginácia pomocou Skip a Take
+        paginatedBooks = await query
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        StateHasChanged(); // Obnoviť stav komponentu po načítaní údajov
+    }
+
+    private void AddNewBook()
+    {
+        Navigation.NavigateTo("/bookform");
+    }
+
+    private void EditBook(int id)
+    {
+        Navigation.NavigateTo($"/bookform/{id}");
+    }
+
+    private async Task DeleteBook(int id)
+    {
+        var book = await DbContext.Books.FindAsync(id);
+        if (book != null)
+        {
+            DbContext.Books.Remove(book);
+            await DbContext.SaveChangesAsync();
+        }
+
+        await LoadBooks();
+    }
+
+    private async Task NextPage()
+    {
+        if (currentPage < totalPages)
+        {
+            currentPage++;
+            await LoadBooks();
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await LoadBooks();
+        }
+    }
+
+    private async Task FilterBooks()
+    {
+        currentPage = 1; // Resetovanie na prvú stránku pri novom filtrovaní
+        await LoadBooks();
+    }
+
+    private async Task FilterBooksByGenre(ChangeEventArgs e)
+    {
+        selectedGenre = e.Value?.ToString() ?? string.Empty;
+        await FilterBooks();
+    }
+
+    private async Task FilterBooksByAuthor(ChangeEventArgs e)
+    {
+        int.TryParse(e.Value?.ToString(), out selectedAuthorId);
+        await FilterBooks();
+    }
+}

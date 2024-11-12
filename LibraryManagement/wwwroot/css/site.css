@@ -1,0 +1,129 @@
+/* Všeobecné nastavenia */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
+
+h3 {
+    color: #343a40;
+    margin-top: 20px;
+}
+
+/* Tlaèidlá */
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+/* Tabu¾ka */
+.table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+}
+
+.table th {
+    background-color: #007bff;
+    color: white;
+    text-align: left;
+}
+
+.table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.table tr:hover {
+    background-color: #ddd;
+}
+
+/* Paginácia */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.pagination button {
+    margin: 0 5px;
+}
+.navbar {
+    background-color: indianred; /* Farba pozadia navigácie */
+}
+
+.nav-link {
+    color: #ffffff; /* Farba textu odkazu */
+}
+
+    .nav-link:hover {
+        background-color: #007bff; /* Farba pozadia pri hover */
+        color: #ffffff; /* Farba textu pri hover */
+    }
+
+/* CSS pravidlá pre sidebar */
+.sidebar {
+    background-color: darkred; /* Nastavenie požadovanej farby pozadia */
+    color: black; /* Farba textu v sidebar */
+    padding: 15px; /* Volite¾né: pridanie paddingu pre lepšie odsadenie obsahu */
+    height: 100vh; /* Volite¾né: výška sidebaru na celú výšku stránky */
+}
+.content px-4 {
+    background-color: darkred;
+}
+
