@@ -118,7 +118,7 @@ h3 {
 
 /* CSS pravidlá pre sidebar */
 .sidebar {
-    background-color: darkred; /* Nastavenie požadovanej farby pozadia */
+    background-color: darkblue; /* Nastavenie požadovanej farby pozadia */
     color: black; /* Farba textu v sidebar */
     padding: 15px; /* Volite¾né: pridanie paddingu pre lepšie odsadenie obsahu */
     height: 100vh; /* Volite¾né: výška sidebaru na celú výšku stránky */
